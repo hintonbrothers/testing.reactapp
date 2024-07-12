@@ -3,7 +3,7 @@ import './App.css';
 function App() {
     return (<div className="App">
         <header className="App-header">
-            <h2>This is Testing Automation ReactApp.......</h2>
+            <h2>Testing Automation ReactApp From Github To EC2.......</h2>
         </header>
     </div>);
 }
