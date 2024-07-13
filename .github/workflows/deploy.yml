@@ -3,14 +3,20 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: SSH into EC2 and deploy
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: "ec2-52-23-45-211.compute-1.amazonaws.com"
@@ -67,4 +73,4 @@ jobs:
             IDBA==
             -----END OPENSSH PRIVATE KEY-----
           script: |
-            ./deploy.sh
+            ./deploy.sh  # Replace with your deployment script or commands
