@@ -1,0 +1,70 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: "ec2-52-23-45-211.compute-1.amazonaws.com"
+          username: "ubuntu"
+          key: |
+            -----BEGIN OPENSSH PRIVATE KEY-----
+            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
+            IDBA==
+            -----END OPENSSH PRIVATE KEY-----
+          script: |
+            ./deploy.sh
