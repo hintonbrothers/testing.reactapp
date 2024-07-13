@@ -3,38 +3,20 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main  # Change to your main branch name if different
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SSH key
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Install dependencies and build
-        run: |
-          npm install
-          npm run build
-
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /path/to/your/react/app
-            rm -rf build
-            scp -r ./build ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/path/to/your/react/app
-
-      - name: Trigger Nginx reload
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ec2-52-23-45-211.compute-1.amazonaws.com
@@ -91,4 +73,4 @@ jobs:
             b25icm90aGVyc3ByaXZhdGVsaW1pdGVkQGdtYWlsLmNvbQECAw==
             -----END OPENSSH PRIVATE KEY-----
           script: |
-            sudo systemctl restart nginx
+            ./deploy.sh  # Replace with your deployment script or commands
