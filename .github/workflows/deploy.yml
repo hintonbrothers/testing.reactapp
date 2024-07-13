@@ -1,9 +1,9 @@
-name: Deploy React App
+name: Deploy
 
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
@@ -13,11 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SSH key
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -26,11 +21,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build React app
+      - name: Build project
         run: npm run build
 
-      - name: Deploy to EC2
-        run: |
-          rsync -avz --delete build/ ubuntu@52.23.45.211:/var/www/reactapp/build
+      - name: Deploy to server
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.HOST }}
+          USERNAME: ${{ secrets.USERNAME }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "$SSH_KEY" > key.pem
+          chmod 600 key.pem
+          scp -i key.pem -r ./build $USERNAME@$HOST:/path/to/deploy
+          ssh -i key.pem $USERNAME@$HOST "sudo systemctl restart nginx"
