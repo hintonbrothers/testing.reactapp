@@ -31,6 +31,6 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          rsync -avz --delete build/ ubuntu@your_ec2_public_ip:/var/www/reactapp/build
+          rsync -avz --delete build/ ubuntu@52.23.45.211:/var/www/reactapp/build
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
