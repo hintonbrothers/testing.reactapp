@@ -21,8 +21,8 @@ jobs:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ec2-52-23-45-211.compute-1.amazonaws.com
-          username: ubuntu
+          host: "ec2-52-23-45-211.compute-1.amazonaws.com"
+          username: "ubuntu"
           key: |
             -----BEGIN OPENSSH PRIVATE KEY-----
             b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAACFwAAAAdzc2gtcn
