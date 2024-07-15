@@ -3,7 +3,7 @@ name: Deploy React App to EC2
 on:
   push:
     branches:
-      - master  # Use 'master' as the branch name
+      - master
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22.x'  # Use 'current' for the latest Node.js version
+          node-version: 'lts/*'  # Use the latest LTS Node.js version
 
       - name: Install dependencies
         run: npm install
@@ -31,7 +31,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}  # Use SSH_PRIVATE_KEY for the SSH private key
           source: "build/*"
-          target: "/etc/nginx/htdocs"
+          target: "/etc/nginx/htdocs"  # Adjust the path as per your Nginx server configuration
           port: 22
           timeout: 30s
           command_timeout: 10m
