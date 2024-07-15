@@ -1,4 +1,4 @@
-name: Deploy React App to EC2 using IAM credentials
+name: Deploy React App to EC2
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
       - name: Build the React app
         run: npm run build
 
-      - name: Copy files via SCP using IAM credentials
+      - name: Copy files via SCP using IAM credentials and SSH key
         uses: appleboy/scp-action@v0.1.2
         with:
           host: ${{ secrets.EC2_IP }}
@@ -32,8 +32,9 @@ jobs:
           source: "build/*"
           target: "/etc/nginx/htdocs"
           aws_access_key_id: ${{ secrets.ACCESS_KEY }}
-          aws_secret_access_key: ${{ secrets.SECRET_ACCESS }}
+          aws_secret_access_key: ${{ secrets.SECRET_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH private key for authentication
 
       - name: Restart Nginx
         run: |
-          ssh -i /path/to/your-key-pair.pem ubuntu@${{ secrets.EC2_IP }} 'sudo systemctl reload nginx'
+          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ubuntu@${{ secrets.EC2_IP }} 'sudo systemctl reload nginx'
