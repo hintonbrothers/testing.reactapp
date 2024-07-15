@@ -1,9 +1,9 @@
-name: Deploy to EC2
+name: Deploy React App to EC2
 
 on:
   push:
     branches:
-      - master
+      - master  # Adjust the branch name as needed
 
 jobs:
   deploy:
@@ -13,23 +13,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Add SSH key
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          ssh-private-key: ${{ secrets.SSH.PRIVATE_KEY }}
-
-      - name: Copy files to EC2
-        run: |
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@${{ secrets.EC2_IP }}:/home/ubuntu/app
+          node-version: '16'
 
       - name: Install dependencies
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} "cd /home/ubuntu/app && npm install"
+        run: npm install
 
-      - name: Build project
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} "cd /home/ubuntu/app && npm run build"
+      - name: Build the React app
+        run: npm run build
 
-      - name: Restart server
+      - name: Copy files via SSH
+        uses: appleboy/scp-action@v0.1.2
+        with:
+          host: ${{ secrets.EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: "build/*"
+          target: "/etc/nginx/htdocs/reactapp"
+
+      - name: Restart Nginx
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} "sudo systemctl restart your_service_name"
+          ssh -i ${{ secrets.EC2_SSH_PRIVATE_KEY }} ubuntu@${{ secrets.EC2_IP }} 'sudo systemctl reload nginx'
