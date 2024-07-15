@@ -18,12 +18,6 @@ jobs:
         with:
           node-version: "22.x"
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build the React app
-        run: npm run build
-
       - name: Copy files via SSH
         uses: appleboy/scp-action@v0.1.2
         with:
@@ -31,8 +25,4 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "build/*"
-          target: "/etc/nginx/htdocs/reactapp"
-
-      - name: Restart Nginx
-        run: |
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ubuntu@${{ secrets.EC2_IP }} 'sudo systemctl reload nginx'
+          target: "/etc/nginx/htdocs"
