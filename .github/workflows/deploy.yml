@@ -1,38 +1,38 @@
-name: Deploy React App
+name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - master
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Use Node.js 16
+        uses: actions/setup-node@v3
         with:
-          node-version: '22.X'
+          node-version: 16
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build the app
+      - name: Build the React app
         run: npm run build
 
-      - name: Deploy to EC2
+      - name: Configure AWS credentials
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
-          EC2_PUBLIC_IP: ${{ secrets.EC2_IP }}
-          EC2_USER: ubuntu
-          EC2_KEY_PATH: ${{ secrets.SSH_PRIVATE_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y sshpass
-          sshpass -p ${{ secrets.EC2_PASSWORD }} scp -o StrictHostKeyChecking=no -r build/* $EC2_USER@$EC2_PUBLIC_IP:/home/ubuntu/your-repo/build
-          sshpass -p ${{ secrets.EC2_PASSWORD }} ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_PUBLIC_IP 'sudo systemctl restart nginx'
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set default.region us-east-1 # Replace with your region
+
+      - name: Deploy to EC2 (optional)
+        # Replace with the appropriate commands for your deployment method
+        # (e.g., using CodeDeploy, CodeBuild, or custom scripts)
+        run: |
+          # Example using scp (replace
