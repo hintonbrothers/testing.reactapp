@@ -1,9 +1,9 @@
-name: Deploy React App to EC2
+name: Deploy React App to EC2 using IAM credentials
 
 on:
   push:
     branches:
-      - master # Adjust the branch name as needed
+      - master
 
 jobs:
   deploy:
@@ -16,13 +16,24 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "22.x"
+          node-version: '22.4'
 
-      - name: Copy files via SSH
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the React app
+        run: npm run build
+
+      - name: Copy files via SCP using IAM credentials
         uses: appleboy/scp-action@v0.1.2
         with:
           host: ${{ secrets.EC2_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ubuntu  # Update with your EC2 instance username
           source: "build/*"
           target: "/etc/nginx/htdocs"
+          aws_access_key_id: ${{ secrets.ACCESS_KEY }}
+          aws_secret_access_key: ${{ secrets.SECRET_ACCESS }}
+
+      - name: Restart Nginx
+        run: |
+          ssh -i /path/to/your-key-pair.pem ubuntu@${{ secrets.EC2_IP }} 'sudo systemctl reload nginx'
