@@ -1,27 +1,42 @@
-name: CI/CD Pipeline
+name: Deploy React App to EC2
 
 on:
   push:
     branches:
-      - master
+      - master  # Use 'master' as the branch name
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          role-to-assume: arn:aws:iam::471112994860:user/temp.user
-          aws-region: us-east-1
+          node-version: 'current'  # Use 'current' for the latest Node.js version
 
-      - name: Deploy to EC2
-        run: |
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=instanceIds,Values=INSTANCE_ID" \
-            --parameters 'commands=["cd /home/ubuntu/your-repo", "git pull testing MASTER", "npm install", "npm run build", "pm2 serve build 3000 --spa"]'
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the React app
+        run: npm run build
+
+      - name: Copy files via SCP to EC2
+        uses: appleboy/scp-action@v0.1.2
+        with:
+          host: ${{ secrets.EC2_IP }}  # Use EC2_IP for the EC2 instance IP address
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Use SSH_PRIVATE_KEY for the SSH private key
+          source: "build/*"
+          target: "/etc/nginx/htdocs"
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          use_insecure_cipher: false
+          rm: false
+          debug: true  # Enable debug mode for detailed logs
+          strip_components: 0
+          overwrite: false
