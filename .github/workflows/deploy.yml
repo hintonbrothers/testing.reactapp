@@ -3,21 +3,39 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master  # or your main branch name
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SSH key
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          node-version: '22.4'
 
-      - name: Deploy over SSH
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.SECRET_KEY }}
+          aws-region: us-west-2
+
+      - name: Deploy to EC2
         run: |
-          ssh ubuntu@ec2-52-23-45-211.compute-1.amazonaws.com 'bash -s' < deploy_script.sh
+          ssh -o StrictHostKeyChecking=no -i /path/to/your/private-key.pem ec2-user@your-ec2-instance-public-dns '
+            cd /etc/nginx/htdocs &&
+            git pull testing.app master &&
+            npm install &&
+            npm run build
+          '
