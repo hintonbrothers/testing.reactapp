@@ -3,23 +3,28 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master  # Replace with your branch name
+      - main  # Adjust branch name as needed
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # GitHub-hosted runner
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SSH Key
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy to EC2
-        run: |
-          ssh ubuntu@ec2-52-23-45-211.compute-1.amazonaws.com 'bash -s' < deploy-script.sh
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: SSH into EC2 instance and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /path/to/your/app  # Adjust path as needed
+            git pull origin main  # Pull latest code from GitHub
+            # Additional deployment commands (e.g., build, restart services)
