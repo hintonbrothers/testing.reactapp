@@ -10,32 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          node-version: '22.4'
+          ssh-private-key: ${{ secrets.SSH.PRIVATE_KEY }}
+
+      - name: Copy files to EC2
+        run: |
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@${{ secrets.EC2_IP }}:/home/ubuntu/app
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} "cd /home/ubuntu/app && npm install"
 
       - name: Build project
-        run: npm run build
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.SECRET_KEY }}
-          aws-region: us-west-2
-
-      - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i /path/to/your/private-key.pem ec2-user@your-ec2-instance-public-dns '
-            cd /etc/nginx/htdocs &&
-            git pull testing.app master &&
-            npm install &&
-            npm run build
-          '
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} "cd /home/ubuntu/app && npm run build"
+
+      - name: Restart server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} "sudo systemctl restart your_service_name"
