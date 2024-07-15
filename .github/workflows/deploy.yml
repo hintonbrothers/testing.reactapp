@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22.4'
+          node-version: '16'
 
       - name: Install dependencies
         run: npm install
@@ -24,17 +24,22 @@ jobs:
       - name: Build the React app
         run: npm run build
 
-      - name: Copy files via SCP using IAM credentials and SSH key
+      - name: Copy files via SCP to EC2
         uses: appleboy/scp-action@v0.1.2
         with:
           host: ${{ secrets.EC2_IP }}
-          username: ubuntu  # Update with your EC2 instance username
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_SSH_KEY }}
           source: "build/*"
           target: "/etc/nginx/htdocs"
-          aws_access_key_id: ${{ secrets.ACCESS_KEY }}
-          aws_secret_access_key: ${{ secrets.SECRET_KEY }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH private key for authentication
-
-      - name: Restart Nginx
-        run: |
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ubuntu@${{ secrets.EC2_IP }} 'sudo systemctl reload nginx'
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          use_insecure_cipher: false
+          rm: false
+          debug: false
+          strip_components: 0
+          overwrite: false
+          proxy_port: 22
+          proxy_timeout: 30s
+          proxy_use_insecure_cipher: false
