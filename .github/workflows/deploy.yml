@@ -1,4 +1,4 @@
-name: Deploy React App to EC2
+name: Deploy React App
 
 on:
   push:
@@ -10,33 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 'lts/*'  # Use the latest LTS Node.js version
+          node-version: '22.X'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build the React app
+      - name: Build the app
         run: npm run build
 
-      - name: Copy files via SCP to EC2
-        uses: appleboy/scp-action@v0.1.2
-        with:
-          host: ${{ secrets.EC2_IP }}  # Use EC2_IP for the EC2 instance IP address
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Use SSH_PRIVATE_KEY for the SSH private key
-          source: "build/*"
-          target: "/etc/nginx/htdocs"  # Adjust the path as per your Nginx server configuration
-          port: 22
-          timeout: 30s
-          command_timeout: 10m
-          use_insecure_cipher: false
-          rm: false
-          debug: true  # Enable debug mode for detailed logs
-          strip_components: 0
-          overwrite: false
+      - name: Deploy to EC2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
+          EC2_PUBLIC_IP: ${{ secrets.EC2_IP }}
+          EC2_USER: ubuntu
+          EC2_KEY_PATH: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.EC2_PASSWORD }} scp -o StrictHostKeyChecking=no -r build/* $EC2_USER@$EC2_PUBLIC_IP:/home/ubuntu/your-repo/build
+          sshpass -p ${{ secrets.EC2_PASSWORD }} ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_PUBLIC_IP 'sudo systemctl restart nginx'
